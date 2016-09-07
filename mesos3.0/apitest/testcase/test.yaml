@@ -21,7 +21,7 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "length_eq", expected: 32}
     - extract_binds:
-         - 'token': {'jsonpath_mini': 'data'}
+        - 'token': {'jmespath': 'data'}
 
 - test: # invalid login
     - name: "invalid POST /v1/login"
@@ -42,3 +42,33 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0}
+
+- test:
+    - name: "valid POST /v1/apps"
+    - url: "/v1/apps"
+    - method: "post"
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [201]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'appid': {'jmespath': 'data.id'}
+
+- test:
+    - name: "valid GET /v1/apps/:aid"
+    - url: {template: "/v1/apps$appid"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+
+- test:
+    - name: "valid PUT /v1/apps/:aid"
+    - url: {template: "/v1/apps$appid"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+
+
+
