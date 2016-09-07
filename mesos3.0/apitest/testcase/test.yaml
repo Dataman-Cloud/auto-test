@@ -41,5 +41,4 @@
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
-        - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0 }
-        - compare: {jmespath: "length(data.apps[*].constraints)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0}
