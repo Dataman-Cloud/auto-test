@@ -57,11 +57,32 @@
         - 'appid': {'jmespath': 'data.id'}
 
 - test:
+    - name: "valid PUT /v1/apps"
+    - url: {template: "v1/apps$appid"}
+    - method: "put"
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test:
     - name: "valid GET /v1/apps/:aid"
     - url: {template: "/v1/apps$appid"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
+
+- test:
+    - name: "valid POST /v1/apps/:aid/restart"
+    - url: {template: "/v1/apps$appid/restart"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.deploymentId)", comparator: "eq", expected: 36}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
 
 - test:
     - name: "valid PUT /v1/apps/:aid"
