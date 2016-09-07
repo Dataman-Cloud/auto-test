@@ -18,8 +18,8 @@
     - headers: {Content-Type: application/json}
     - expected_status: [200]
     - validators: # operator is applied as: <actual> <operator> <expected>
-        - compare: {jsonpath_mini: "code",   comparator: "eq",     expected: 0}
-        - compare: {jsonpath_mini: "data",   comparator: "length_eq",    expected: 32}
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "length_eq", expected: 32}
     - extract_binds:
          - 'token': {'jsonpath_mini': 'data'}
 
@@ -31,7 +31,7 @@
     - headers: {Content-Type: application/json}
     - expected_status: [400]
     - validators:
-        - compare: {jsonpath_mini: "code",   comparator: "eq",     expected: 12007}
+        - compare: {jmespath: "code", comparator: "eq", expected: 12007}
 
 - test: 
     - name: "valid GET /v1/apps"
@@ -40,5 +40,6 @@
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
-        - compare: {jsonpath_mini: "code",   comparator: "eq",     expected: 0}
-        - compare: {jsonpath_mini: "data.apps[0].id",   comparator: "eq",   expected: 0 }
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0 }
+        - compare: {jmespath: "length(data.apps[*].constraints)", comparator: "gt", expected: 0}
