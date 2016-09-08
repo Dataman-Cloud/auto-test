@@ -117,11 +117,20 @@
 
 
 - test:
-    - name: "valid PUT /v1/apps/:aid"
+    - name: "valid DELETE /v1/apps/:aid"
     - url: {template: "/v1/apps$appid"}
     - method: "delete"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
 
 
-
+- test:
+    - name: "valid GET /version"
+    - url: "/v1/version"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.build_time)", comparator: "gt", expected: 0}
