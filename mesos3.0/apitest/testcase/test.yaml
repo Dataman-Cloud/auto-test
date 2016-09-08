@@ -23,16 +23,6 @@
     - extract_binds:
         - 'token': {'jmespath': 'data'}
 
-- test: # invalid login
-    - name: "invalid POST /v1/login"
-    - url: "/v1/login"
-    - method: "post"
-    - body: '{"email": "admin@dataman-inc.com","password": "Daaaaaaaaaa"}'
-    - headers: {Content-Type: application/json}
-    - expected_status: [400]
-    - validators:
-        - compare: {jmespath: "code", comparator: "eq", expected: 12007}
-
 - test: 
     - name: "valid GET /v1/apps"
     - url: "/v1/apps"
