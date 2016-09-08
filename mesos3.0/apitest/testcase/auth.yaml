@@ -9,6 +9,8 @@
 ---
 - config:
     - testset: "Tests using test app"
+    - generators:  
+        - 'test': {type: 'random_int'}
 
 - test: # valid login
     - name: "valid POST /v1/login"
@@ -24,6 +26,7 @@
         - 'token': {'jmespath': 'data'}
 
 - test: # invalid login
+    - generator_binds: {test1: test}
     - name: "invalid POST /v1/login"
     - url: "/v1/login"
     - method: "post"
@@ -38,13 +41,33 @@
     - name: "POST /v1/accounts"
     - url: "/v1/accounts"
     - method: "post"
-    - body: {template: '{"email": "$token@s.com","password": "Dataman1234"}'}
+    - body: {template: '{"email": "$test1","password": "Dataman1234"}'}
     - headers: {template: {Authorization: $token}}
-    - expected_status: [209]
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+
+- test:
+    - name: "POST /v1/accounts"
+    - url: "/v1/accounts"
+    - method: "post"
+    - body: '{"email": "admin@dataman-inc.com","password": "Dataman1234"}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [409]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 12037}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "email already exists"}
+
+- test:
+    - name: "POST /v1/logout"
+    - url: "/v1/logout"
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
 
 
-          
