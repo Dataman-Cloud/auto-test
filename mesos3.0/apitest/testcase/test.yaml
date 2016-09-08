@@ -93,6 +93,8 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data.tasks[*].appId", comparator: "contains", expected: {template: "$appid"}}
+    - extract_binds:
+        - 'taskid': {jmespath: 'data.tasks[0].id'}
 
 - test:
     - name: "valid GET /v1/apps/:aid/versions"
@@ -115,6 +117,15 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
+- test:
+    - name: "POST /v1/tasks/delete"
+    - url: "/v1/tasks/delete?scale=true"
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"ids":["$taskid"]}' }
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
 - test:
     - name: "valid DELETE /v1/apps/:aid"
@@ -122,6 +133,15 @@
     - method: "delete"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
+
+- test:
+    - name: "POST /v1/queue"
+    - url: "/v1/queue"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
 
 - test:
