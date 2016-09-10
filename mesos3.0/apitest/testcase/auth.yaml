@@ -9,14 +9,15 @@
 ---
 - config:
     - testset: "Tests using test app"
+    - variable_binds: {email: 'admin@dataman-inc.com', password: "Dataman1234", wrongpassword: "Daaaaaaaaaa" }
     - generators:  
         - 'test': {type: 'random_int'}
 
 - test: # valid login
-    - name: "valid POST /v1/login"
+    - name: "Normal login"
     - url: "/v1/login"
     - method: "post"
-    - body: '{"email": "admin@dataman-inc.com","password": "Dataman1234"}'
+    - body: {template: '{"email": "$email","password": "$password"}'}
     - headers: {Content-Type: application/json}
     - expected_status: [200]
     - validators: # operator is applied as: <actual> <operator> <expected>
@@ -26,22 +27,21 @@
         - 'token': {'jmespath': 'data'}
 
 - test: # invalid login
-    - generator_binds: {test1: test}
-    - name: "invalid POST /v1/login"
+    - name: "Abnormal login"
     - url: "/v1/login"
     - method: "post"
-    - body: '{"email": "admin@dataman-inc.com","password": "Daaaaaaaaaa"}'
+    - body: {template: '{"email": "$email","password": "$wrongpassword"}'}
     - headers: {Content-Type: application/json}
     - expected_status: [400]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 12007}
 
-
 - test:
-    - name: "POST /v1/accounts"
+    - generator_binds: {testa: test}
+    - name: "Create user"
     - url: "/v1/accounts"
     - method: "post"
-    - body: {template: '{"email": "$test1","password": "Dataman1234"}'}
+    - body: {template: '{"email": "$testa","password": "$password"}'}
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
@@ -49,10 +49,10 @@
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
 - test:
-    - name: "POST /v1/accounts"
+    - name: "Abnormal Create user"
     - url: "/v1/accounts"
     - method: "post"
-    - body: '{"email": "admin@dataman-inc.com","password": "Dataman1234"}'
+    - body: {template: '{"email": "$email","password": "$password"}'}
     - headers: {template: {Authorization: $token}}
     - expected_status: [409]
     - validators:
@@ -60,14 +60,45 @@
         - compare: {jmespath: "data", comparator: "str_eq", expected: "email already exists"}
 
 - test:
-    - name: "POST /v1/logout"
-    - url: "/v1/logout"
-    - method: "post"
+    - name: "Normal get all userinfo"
+    - url: "/v1/accounts"
+    - method: "get"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data[*].email)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data[*].loginAt)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'userid': {jmespath: 'data[0].id'}
+
+- test: 
+    - name: "Normal get userinfo by userid"
+    - url: {template: "/v1/accounts/$userid"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [201]
+
+- test:
+    - name: "Normal logout"
+    - url: "/v1/logout"
+    - method: "post"
+    - headers: {template: {Authorization: $testa}}
+    - expected_status: [401]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+
+- test: 
+    - name: "Abnormal logout"
+    - url: "/v1/logout"
+    - method: "post"
+    - headers: {template: {Authorization: $testa}}
+    - expected_status: [401]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 1}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "token doesn't exists or expired"}
 
 
 
