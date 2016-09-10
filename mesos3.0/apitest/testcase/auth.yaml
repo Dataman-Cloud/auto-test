@@ -156,7 +156,7 @@
 
 - test:
     - name: "Normal disable user"
-    - url: {template: {"/v1/accounts/$testid/disable"}}
+    - url: {template: "/v1/accounts/$testid/disable"}
     - method: "put"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
@@ -164,12 +164,12 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
-
-
-
-
-
-
+- test: 
+    - name: "Normal  test  login"
+    - url: "/v1/login"
+    - method: "post"
+    - body: {template: '{"email": "$testa","password": "$testpasswd1"}'}
+    - expected_status: [400]
 
 - test:
     - name: "Normal logout"
