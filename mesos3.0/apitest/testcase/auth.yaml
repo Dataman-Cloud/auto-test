@@ -9,7 +9,7 @@
 ---
 - config:
     - testset: "Tests using test app"
-    - variable_binds: {email: 'admin@dataman-inc.com', password: "Dataman1234", wrongpassword: "Daaaaaaaaaa" }
+    - variable_binds: {email: 'admin@dataman-inc.com', password: "Dataman1234", testpasswd: "Dataman12345", wrongpassword: "Daaaaaaaaaa" }
     - generators:  
         - 'test': {type: 'random_int'}
 
@@ -105,6 +105,29 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.email)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "Normali test  login"
+    - url: "/v1/login"
+    - method: "post"
+    - body: {template: '{"email": "$testa","password": "$password"}'}
+    - headers: {Content-Type: application/json}
+    - expected_status: [200]
+    - extract_binds:
+        - 'testtoken': {'jmespath': 'data'}
+
+- test: 
+    - name: "Normal changed password"
+    - url: "/v1/password"
+    - method: "put"
+    - body: {template: '{"oldpassword": "$password","password": "$testpasswd"}'}
+    - headers: {template: {Authorization: $testtoken}}
+    - expected_status: [200]
+    - validators:
+         - compare: {jmespath: "code", comparator: "eq", expected: 0}
+         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+    
+
 
 - test:
     - name: "Normal logout"
