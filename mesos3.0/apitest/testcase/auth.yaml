@@ -9,7 +9,7 @@
 ---
 - config:
     - testset: "Tests using test app"
-    - variable_binds: {email: 'admin@dataman-inc.com', password: "Dataman1234", testpasswd: "Dataman12345", wrongpassword: "Daaaaaaaaaa" }
+    - variable_binds: {email: 'admin@dataman-inc.com', password: "Dataman1234", testpasswd: "Dataman12345", testpasswd1: "Dataman123456" ,wrongpassword: "Daaaaaaaaaa" }
     - generators:  
         - 'test': {type: 'random_int'}
 
@@ -41,7 +41,7 @@
     - name: "Create user"
     - url: "/v1/accounts"
     - method: "post"
-    - body: {template: '{"email": "$testa","password": "$password"}'}
+    - body: {template: '{"email": "$testa","password": "$testpasswd"}'}
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
@@ -107,10 +107,10 @@
         - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
 
 - test: 
-    - name: "Normali test  login"
+    - name: "Normal test  login"
     - url: "/v1/login"
     - method: "post"
-    - body: {template: '{"email": "$testa","password": "$password"}'}
+    - body: {template: '{"email": "$testa","password": "$testpasswd"}'}
     - headers: {Content-Type: application/json}
     - expected_status: [200]
     - extract_binds:
@@ -120,24 +120,66 @@
     - name: "Normal changed password"
     - url: "/v1/password"
     - method: "put"
-    - body: {template: '{"oldpassword": "$password","password": "$testpasswd"}'}
+    - body: {template: '{"oldpassword": "$testpasswd","password": "$testpasswd1"}'}
     - headers: {template: {Authorization: $testtoken}}
     - expected_status: [200]
     - validators:
-         - compare: {jmespath: "code", comparator: "eq", expected: 0}
-         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
     
+- test: 
+    - name: "Normali test  login"
+    - url: "/v1/login"
+    - method: "post"
+    - body: {template: '{"email": "$testa","password": "$testpasswd1"}'}
+    - expected_status: [200]
+
+
+- test: 
+    - name: "Abnormal changed password"
+    - url: "/v1/password"
+    - method: "put"
+    - body: '{"email": "","password": ""}'
+    - headers: {template: {Authorization: $testtoken}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 12034}
+
+- test:
+    - name: "Normal test get about me"
+    - url: "/v1/aboutme"
+    - method: "get"
+    - headers: {template: {Authorization: $testtoken}}
+    - expected_status: [200]
+    - extract_binds:
+        - 'testid': {jmespath: 'data.id'}
+
+- test:
+    - name: "Normal disable user"
+    - url: {template: {"/v1/accounts/$testid/disable"}}
+    - method: "put"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+
+
+
+
+
+
 
 
 - test:
     - name: "Normal logout"
     - url: "/v1/logout"
     - method: "post"
-    - headers: {template: {Authorization: $testa}}
-    - expected_status: [401]
+    - headers: {template: {Authorization: $testtoken}}
+    - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
-        - compare: {jmespath: "data", comparator: "str_eq", expected: "success:"}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
 
 - test: 
