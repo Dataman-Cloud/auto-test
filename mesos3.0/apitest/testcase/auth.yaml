@@ -100,8 +100,11 @@
     - url: "/v1/aboutme"
     - method: "get"
     - headers: {template: {Authorization: $token}}
-    - expected_status: [209]
-
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.email)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
 
 - test:
     - name: "Normal logout"
@@ -112,6 +115,7 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success:"}
+
 
 - test: 
     - name: "Abnormal logout"
