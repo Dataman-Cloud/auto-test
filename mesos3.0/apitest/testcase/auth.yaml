@@ -181,7 +181,6 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
-
 - test: 
     - name: "Abnormal logout"
     - url: "/v1/logout"
