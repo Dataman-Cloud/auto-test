@@ -78,7 +78,30 @@
     - url: {template: "/v1/accounts/$userid"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
-    - expected_status: [201]
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data.id", comparator: "str_eq", expected: {template: "$userid"}}
+        - compare: {jmespath: "length(data.email)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
+
+- test:
+    - name: "Abnormal get userinfo by userid"
+    - url: "/v1/accounts/99999"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 12005}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "record not found"}
+
+- test:
+    - name: "Normal get about me"
+    - url: "/v1/aboutme"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [209]
+
 
 - test:
     - name: "Normal logout"
@@ -88,7 +111,7 @@
     - expected_status: [401]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
-        - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "success:"}
 
 - test: 
     - name: "Abnormal logout"
