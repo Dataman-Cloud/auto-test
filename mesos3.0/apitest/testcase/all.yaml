@@ -320,7 +320,7 @@
     - name: "valid POST /v1/apps"
     - url: "/v1/apps"
     - method: "post"
-    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
     - headers: {template: {Authorization: $token}}
     - expected_status: [201]
     - validators:
@@ -329,11 +329,22 @@
     - extract_binds:
         - 'appid': {'jmespath': 'data.id'}
 
+- test: # 异常发应用 应用名相同
+    - name: "valid POST /v1/apps"
+    - url: "/v1/apps"
+    - method: "post"
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "already exists"}
+
 - test: #正常更新应用
     - name: "valid PUT /v1/apps"
     - url: {template: "v1/apps$appid"}
     - method: "put"
-    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
