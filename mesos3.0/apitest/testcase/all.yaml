@@ -191,5 +191,120 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 1}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "token doesn't exists or expired"}
 
+- test: # 正常获取token
+    - name: "18Normal login"
+    - url: "/v1/login"
+    - method: "post"
+    - body: {template: '{"email": "$email","password": "$password"}'}
+    - headers: {Content-Type: application/json}
+    - expected_status: [200]
+    - validators: # operator is applied as: <actual> <operator> <expected>
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "length_eq", expected: 32}
+    - extract_binds:
+        - 'token': {'jmespath': 'data'}
+
+- test: # 正常获取主机列表
+    - name: "19Normal get node list"
+    - url: "/v1/nodes"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.masters[*].id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.slaves[*].id)", comparator: "gt", expected: 0 }
+    - extract_binds: 
+        - 'node_ip': {jmespath: 'data.slaves[0].ip'}
+
+- test: # 正常获取集群监控信息
+    - name: "20Normal get metrics info"
+    - url: "/v1/metrics/snapshot"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data)", comparator: "gt", expected: 0}
+
+- test: # 正常获取指定主机信息
+    - name: "21Normal get node info "
+    - url: {template: "/v1/nodes/$node_ip/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.Driver)", comparator: "gt", expected: 0}
+
+- test: # 异常 输入不存在主机获取主机信息
+    - name: "22Abnormal get node info "
+    - url: "/v1/nodes/1.1.1.1/info"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 23009}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "The node is not exist."}
+
+- test: #正常获取知道主机容器列表
+    - name: "23Normal get instances list"
+    - url: {template: "/v1/nodes/$node_ip/instances"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data[*].Image)", comparator: "gt", expected: 0 }
+    - extract_binds:
+        - 'instances_id': {jmespath: "data[0].Id"}
+
+- test: #异常输入错误主机ip获取指定容器列表
+    - name: "24Abnormal get instances list "
+    - url: "/v1/nodes/1.1.1.1/instances"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 23009}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "The node is not exist."}
+
+- test: #正常获取指定主机镜像
+    - name: "25Normal get images "
+    - url: {template: "/v1/nodes/$node_ip/images"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data[*].RepoTags)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "data[*].Created", comparator: "gt", expected: 0}
+        - compare: {jmespath: "data[*].Size", comparator: "gt", expected: 0}
+        - compare: {jmespath: "data[*].VirtualSize", comparator: "gt", expected: 0}
+
+- test: #正常获取指定主机指定容器信息
+    - name: "26Normal get instances info"
+    - url: {template: "/v1/nodes/$node_ip/instances/$instances_id/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.Created)", comparator: "gt", expected: 0}
+
+- test: #异常输入错误容器id 获取指定容器信息
+    - name: "27Abnormal get instances info"
+    - url: {template: "/v1/nodes/$node_ip/instances/999999999/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 23008}
+        - compare: {jmespath: "data", comparator: "contains", expected: "No such container"}
+
 
 
