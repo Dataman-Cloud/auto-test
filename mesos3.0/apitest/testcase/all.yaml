@@ -306,5 +306,138 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 23008}
         - compare: {jmespath: "data", comparator: "contains", expected: "No such container"}
 
+- test: # valid login
+    - name: "valid POST /v1/login"
+    - url: "/v1/login"
+    - method: "post"
+    - body: '{"email": "admin@dataman-inc.com","password": "Dataman1234"}'
+    - headers: {Content-Type: application/json}
+    - expected_status: [200]
+    - validators: # operator is applied as: <actual> <operator> <expected>
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "length_eq", expected: 32}
+    - extract_binds:
+        - 'token': {'jmespath': 'data'}
 
+- test: 
+    - name: "valid GET /v1/apps"
+    - url: "/v1/apps"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0}
+
+- test:
+    - name: "valid POST /v1/apps"
+    - url: "/v1/apps"
+    - method: "post"
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [201]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'appid': {'jmespath': 'data.id'}
+
+- test:
+    - name: "valid PUT /v1/apps"
+    - url: {template: "v1/apps$appid"}
+    - method: "put"
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test:
+    - name: "valid GET /v1/apps/:aid"
+    - url: {template: "/v1/apps$appid"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+
+- test:
+    - name: "valid POST /v1/apps/:aid/restart"
+    - url: {template: "/v1/apps$appid/restart"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.deploymentId)", comparator: "eq", expected: 36}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
+
+- test:
+    - name: "valid GET /v1/apps/:aid/tasks"
+    - url: {template: "v1/apps$appid/tasks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data.tasks[*].appId", comparator: "contains", expected: {template: "$appid"}}
+    - extract_binds:
+        - 'taskid': {jmespath: 'data.tasks[0].id'}
+
+- test:
+    - name: "valid GET /v1/apps/:aid/versions"
+    - url: {template: "/v1/apps$appid/versions"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.versions[*])", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'version': {jmespath: 'data.versions[0]'}
+
+- test:
+    - name: "valid GET /v1/apps/:aid/versions"
+    - url: {template: "/v1/apps$appid/versions/$version"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test:
+    - name: "POST /v1/tasks/delete"
+    - url: "/v1/tasks/delete?scale=true"
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"ids":["$taskid"]}' }
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test:
+    - name: "valid DELETE /v1/apps/:aid"
+    - url: {template: "/v1/apps$appid"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+
+- test:
+    - name: "POST /v1/queue"
+    - url: "/v1/queue"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+
+- test:
+    - name: "valid GET /version"
+    - url: "/v1/version"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.build_time)", comparator: "gt", expected: 0}
 
