@@ -1,2 +1,4 @@
 #!/bin/bash
-pyresttest http://192.168.1.155:9999  node.yaml
+./auth.sh
+./node.sh
+

@@ -13,8 +13,8 @@
     - generators:  
         - 'test': {type: 'random_int'}
 
-- test: # valid login
-    - name: "Normal login"
+- test: # 正常测试登录获取token
+    - name: "1Normal login"
     - url: "/v1/login"
     - method: "post"
     - body: {template: '{"email": "$email","password": "$password"}'}
@@ -26,8 +26,8 @@
     - extract_binds:
         - 'token': {'jmespath': 'data'}
 
-- test: # invalid login
-    - name: "Abnormal login"
+- test: # 异常测试登录，输入错误帐号密码，获取token
+    - name: "2Abnormal login"
     - url: "/v1/login"
     - method: "post"
     - body: {template: '{"email": "$email","password": "$wrongpassword"}'}
@@ -36,9 +36,9 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 12007}
 
-- test:
+- test: # 正常创建用户
     - generator_binds: {testa: test}
-    - name: "Create user"
+    - name: "3Create user"
     - url: "/v1/accounts"
     - method: "post"
     - body: {template: '{"email": "$testa","password": "$testpasswd"}'}
@@ -48,8 +48,8 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
-- test:
-    - name: "Abnormal Create user"
+- test: #异常创建相同用户
+    - name: "4Abnormal Create user"
     - url: "/v1/accounts"
     - method: "post"
     - body: {template: '{"email": "$email","password": "$password"}'}
@@ -59,8 +59,8 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 12037}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "email already exists"}
 
-- test:
-    - name: "Normal get all userinfo"
+- test: #正常获取用户列表
+    - name: "5Normal get all userinfo"
     - url: "/v1/accounts"
     - method: "get"
     - headers: {template: {Authorization: $token}}
@@ -73,8 +73,8 @@
     - extract_binds:
         - 'userid': {jmespath: 'data[0].id'}
 
-- test: 
-    - name: "Normal get userinfo by userid"
+- test: #正常获取用户信息
+    - name: "6Normal get userinfo by userid"
     - url: {template: "/v1/accounts/$userid"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
@@ -85,8 +85,8 @@
         - compare: {jmespath: "length(data.email)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
 
-- test:
-    - name: "Abnormal get userinfo by userid"
+- test: #异常 输入不存在用户id 获取用户信息
+    - name: "7Abnormal get userinfo by userid"
     - url: "/v1/accounts/99999"
     - method: "get"
     - headers: {template: {Authorization: $token}}
@@ -95,8 +95,8 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 12005}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "record not found"}
 
-- test:
-    - name: "Normal get about me"
+- test: # 正常获取当前用户信息
+    - name: "8Normal get about me"
     - url: "/v1/aboutme"
     - method: "get"
     - headers: {template: {Authorization: $token}}
@@ -106,8 +106,8 @@
         - compare: {jmespath: "length(data.email)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.loginAt)", comparator: "gt", expected: 0}
 
-- test: 
-    - name: "Normal test  login"
+- test: #正常测试新建用户能否正常登录
+    - name: "9Normal test  login"
     - url: "/v1/login"
     - method: "post"
     - body: {template: '{"email": "$testa","password": "$testpasswd"}'}
@@ -116,8 +116,8 @@
     - extract_binds:
         - 'testtoken': {'jmespath': 'data'}
 
-- test: 
-    - name: "Normal changed password"
+- test: #正常测试新建用户修改密码
+    - name: "10Normal changed password"
     - url: "/v1/password"
     - method: "put"
     - body: {template: '{"oldpassword": "$testpasswd","password": "$testpasswd1"}'}
@@ -127,16 +127,16 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
     
-- test: 
-    - name: "Normali test  login"
+- test: #正常测试新建用户修改密码后能否登录
+    - name: "11Normali test  login"
     - url: "/v1/login"
     - method: "post"
     - body: {template: '{"email": "$testa","password": "$testpasswd1"}'}
     - expected_status: [200]
 
 
-- test: 
-    - name: "Abnormal changed password"
+- test: #异常，输入空密码，测试新建用户修改密码
+    - name: "12Abnormal changed password"
     - url: "/v1/password"
     - method: "put"
     - body: '{"email": "","password": ""}'
@@ -145,8 +145,8 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 12034}
 
-- test:
-    - name: "Normal test get about me"
+- test: #正常测试为获取用户id
+    - name: "13Normal test get about me"
     - url: "/v1/aboutme"
     - method: "get"
     - headers: {template: {Authorization: $testtoken}}
@@ -154,8 +154,8 @@
     - extract_binds:
         - 'testid': {jmespath: 'data.id'}
 
-- test:
-    - name: "Normal disable user"
+- test: #正常测试注销新建用户
+    - name: "14Normal disable user"
     - url: {template: "/v1/accounts/$testid/disable"}
     - method: "put"
     - headers: {template: {Authorization: $token}}
@@ -164,25 +164,25 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
-- test: 
-    - name: "Normal  test  login"
+- test: #正常测试注销用户能否登录
+    - name: "15Normal  test  login"
     - url: "/v1/login"
     - method: "post"
     - body: {template: '{"email": "$testa","password": "$testpasswd1"}'}
     - expected_status: [400]
 
-- test:
-    - name: "Normal logout"
+- test: #正常测试退出登录
+    - name: "16Normal logout"
     - url: "/v1/logout"
     - method: "post"
-    - headers: {template: {Authorization: $testtoken}}
+    - headers: {template: {Authorization: $token}}
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
 
-- test: 
-    - name: "Abnormal logout"
+- test: #异常测试，输入错误token 登出
+    - name: "17Abnormal logout"
     - url: "/v1/logout"
     - method: "post"
     - headers: {template: {Authorization: $testa}}

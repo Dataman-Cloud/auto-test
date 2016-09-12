@@ -117,3 +117,12 @@
         - compare: {jmespath: "length(data.Id)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.Created)", comparator: "gt", expected: 0}
 
+- test:
+    - name: "Abnormal get instances info"
+    - url: {template: "/v1/nodes/$node_ip/instances/999999999/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 23008}
+        - compare: {jmespath: "data", comparator: "contains", expected: "No such container"}
