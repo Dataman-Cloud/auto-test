@@ -59,4 +59,25 @@
         - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.Driver)", comparator: "gt", expected: 0}
 
- 
+- test:
+    - name: "Abnormal get node info "
+    - url: "/v1/nodes/1.1.1.1/info"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [404]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 23009}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "The node is not exist."}
+
+- test:
+    - name: "Normal get instances "
+    - url: {template: "/v1/nodes/$node_ip/instances"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data[*].Image)", comparator: "gt", expected: 0 }
+
+
