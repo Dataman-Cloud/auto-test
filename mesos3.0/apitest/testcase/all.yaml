@@ -333,7 +333,7 @@
     - name: "valid POST /v1/apps"
     - url: "/v1/apps"
     - method: "post"
-    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"HOST"},"type":"DOCKER"}}'
+    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
     - headers: {template: {Authorization: $token}}
     - expected_status: [400]
     - validators:
