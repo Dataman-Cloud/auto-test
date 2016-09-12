@@ -306,20 +306,7 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 23008}
         - compare: {jmespath: "data", comparator: "contains", expected: "No such container"}
 
-- test: # valid login
-    - name: "valid POST /v1/login"
-    - url: "/v1/login"
-    - method: "post"
-    - body: '{"email": "admin@dataman-inc.com","password": "Dataman1234"}'
-    - headers: {Content-Type: application/json}
-    - expected_status: [200]
-    - validators: # operator is applied as: <actual> <operator> <expected>
-        - compare: {jmespath: "code", comparator: "eq", expected: 0}
-        - compare: {jmespath: "data", comparator: "length_eq", expected: 32}
-    - extract_binds:
-        - 'token': {'jmespath': 'data'}
-
-- test: 
+- test: #正常获取应用列表
     - name: "valid GET /v1/apps"
     - url: "/v1/apps"
     - method: "get"
@@ -329,7 +316,7 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.apps[*].id)", comparator: "gt", expected: 0}
 
-- test:
+- test: # 正常发应用
     - name: "valid POST /v1/apps"
     - url: "/v1/apps"
     - method: "post"
@@ -342,7 +329,7 @@
     - extract_binds:
         - 'appid': {'jmespath': 'data.id'}
 
-- test:
+- test: #正常更新应用
     - name: "valid PUT /v1/apps"
     - url: {template: "v1/apps$appid"}
     - method: "put"
@@ -352,14 +339,14 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
-- test:
+- test: # 正常获取应用信息
     - name: "valid GET /v1/apps/:aid"
     - url: {template: "/v1/apps$appid"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
 
-- test:
+- test: # 正常重启应用
     - name: "valid POST /v1/apps/:aid/restart"
     - url: {template: "/v1/apps$appid/restart"}
     - method: "post"
@@ -370,7 +357,7 @@
         - compare: {jmespath: "length(data.deploymentId)", comparator: "eq", expected: 36}
         - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
 
-- test:
+- test: # 正常获取应用列表
     - name: "valid GET /v1/apps/:aid/tasks"
     - url: {template: "v1/apps$appid/tasks"}
     - method: "get"
@@ -382,7 +369,7 @@
     - extract_binds:
         - 'taskid': {jmespath: 'data.tasks[0].id'}
 
-- test:
+- test: #正常获取应用的所有版本
     - name: "valid GET /v1/apps/:aid/versions"
     - url: {template: "/v1/apps$appid/versions"}
     - method: "get"
@@ -394,7 +381,7 @@
     - extract_binds:
         - 'version': {jmespath: 'data.versions[0]'}
 
-- test:
+- test: #正常获取指定应用指定版本信息
     - name: "valid GET /v1/apps/:aid/versions"
     - url: {template: "/v1/apps$appid/versions/$version"}
     - method: "get"
@@ -403,7 +390,7 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
-- test:
+- test: #正常删除指定tasks
     - name: "POST /v1/tasks/delete"
     - url: "/v1/tasks/delete?scale=true"
     - method: "post"
@@ -413,14 +400,14 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
-- test:
+- test: #正常删除应用
     - name: "valid DELETE /v1/apps/:aid"
     - url: {template: "/v1/apps$appid"}
     - method: "delete"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
 
-- test:
+- test: #正常获取所有等待执行的任务实例
     - name: "POST /v1/queue"
     - url: "/v1/queue"
     - method: "get"
@@ -430,7 +417,7 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
 
 
-- test:
+- test: #正常获取平台版本
     - name: "valid GET /version"
     - url: "/v1/version"
     - method: "get"
@@ -440,4 +427,18 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
         - compare: {jmespath: "length(data.build_time)", comparator: "gt", expected: 0}
+
+- test: #正常获取平台健康检查
+    - name: "GET /v1/health"
+    - url: "/v1/health"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "str_eq", expected: "healthy"}
+
+
+
+
 
