@@ -1,4 +1,4 @@
-#finushed
+#finished
 用户管理
 登录 /v1/login     ok ok 
 登出 /v1/logout    ok ok
