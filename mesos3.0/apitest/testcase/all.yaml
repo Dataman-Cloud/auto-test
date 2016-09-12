@@ -340,6 +340,17 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 22001}
         - compare: {jmespath: "data", comparator: "contains", expected: "already exists"}
 
+- test: # 异常发应用 json异常
+    - name: "valid POST /v1/apps"
+    - url: "/v1/apps"
+    - method: "post"
+    - body: '{"id":"simple-template","cmd":null"cpus":0.1,"mem":128,"disk":0,"instances":1,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "invalid character"}
+
 - test: #正常更新应用
     - name: "valid PUT /v1/apps"
     - url: {template: "v1/apps$appid"}
