@@ -126,7 +126,7 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "success"}
-    
+
 - test: #正常测试新建用户修改密码后能否登录
     - name: "11Normali test  login"
     - url: "/v1/login"
@@ -360,16 +360,19 @@
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.deploymentId)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
 
 - test: #异常更新应用
     - name: "valid PUT /v1/apps"
     - url:  "v1/apps/appid"
     - method: "put"
-    - body: '{"id":"simple-templateddd","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
+    - body: '{"id":"simple-temp","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
     - headers: {template: {Authorization: $token}}
-    - expected_status: [200]
+    - expected_status: [400]
     - validators:
-        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
 
 - test: # 正常获取应用信息
     - name: "valid GET /v1/apps/:aid"
@@ -377,6 +380,21 @@
     - method: "get"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.id)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.deployments)", comparator: "gt", expected: 0}
+        - compare: {jmespath: "length(data.container)", comparator: "gt", expected: 0}
+
+- test: # 异常获取应用信息 appid不存在
+    - name: "valid GET /v1/apps/:aid"
+    - url: "/v1/apps/appid0000000000"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
 
 - test: # 正常重启应用
     - name: "valid POST /v1/apps/:aid/restart"
@@ -388,6 +406,16 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.deploymentId)", comparator: "eq", expected: 36}
         - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
+
+- test: # 异常重启应用 appid不存在
+    - name: "valid POST /v1/apps/:aid/restart"
+    - url: {template: "/v1/apps/appid0000000000/restart"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
 
 - test: # 正常获取应用列表
     - name: "valid GET /v1/apps/:aid/tasks"
@@ -401,6 +429,17 @@
     - extract_binds:
         - 'taskid': {jmespath: 'data.tasks[0].id'}
 
+- test: # 异常获取应用列表 appid不存在
+    - name: "valid GET /v1/apps/:aid/tasks"
+    - url: {template: "v1/apps/appid0000000000/tasks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
+
+
 - test: #正常获取应用的所有版本
     - name: "valid GET /v1/apps/:aid/versions"
     - url: {template: "/v1/apps$appid/versions"}
@@ -413,6 +452,16 @@
     - extract_binds:
         - 'version': {jmespath: 'data.versions[0]'}
 
+- test: #异常获取应用的所有版本 appid不存在
+    - name: "valid GET /v1/apps/:aid/versions"
+    - url: {template: "/v1/apps/appid0000000000/versions"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
+
 - test: #正常获取指定应用指定版本信息
     - name: "valid GET /v1/apps/:aid/versions"
     - url: {template: "/v1/apps$appid/versions/$version"}
@@ -421,6 +470,26 @@
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test: #异常获取指定应用指定版本信息 appid不存在
+    - name: "valid GET /v1/apps/:aid/versions"
+    - url: {template: "/v1/apps/appid0000000000/versions/$version"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
+
+- test: #异常获取指定应用指定版本信息 version不存在
+    - name: "valid GET /v1/apps/:aid/versions"
+    - url: {template: "/v1/apps$appid/versions/version9999"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "Invalid format"}
 
 - test: #正常删除指定tasks
     - name: "POST /v1/tasks/delete"
@@ -431,6 +500,18 @@
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "killing tasks scheduled"}
+
+- test: #异常删除指定tasks tasksID不存在
+    - name: "POST /v1/tasks/delete"
+    - url: "/v1/tasks/delete?scale=true"
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"ids":["taskid999999999"]}' }
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "Invalid task"}
 
 - test: #正常删除应用
     - name: "valid DELETE /v1/apps/:aid"
@@ -438,6 +519,20 @@
     - method: "delete"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.deploymentId)", comparator: "eq", expected: 36}
+        - compare: {jmespath: "length(data.version)", comparator: "gt", expected: 0}
+
+- test: #异常删除应用 appid不存在
+    - name: "valid DELETE /v1/apps/:aid"
+    - url: {template: "/v1/apps/appid0000000000"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [400]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 22001}
+        - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
 
 - test: #正常获取所有等待执行的任务实例
     - name: "POST /v1/queue"
@@ -447,7 +542,6 @@
     - expected_status: [200]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
-
 
 - test: #正常获取平台版本
     - name: "valid GET /version"
@@ -469,8 +563,3 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "str_eq", expected: "healthy"}
-
-
-
-
-
