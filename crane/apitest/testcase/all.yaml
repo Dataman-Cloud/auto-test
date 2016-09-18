@@ -30,8 +30,57 @@
     - method: "post"
     - body: {template: '{"Email": "Email","Password": "Password"}'}
     - headers: {Content-Type: application/json}
-    - expected_status: [401]
+    - expected_status: [503]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 10001}
         - compare: {jmespath: "message", comparator: "contains", expected: "account login failed"}
+
+- test: # 正常获取主机列表
+    - name: "获取主机列表"
+    - url: "/api/v1/nodes"
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].ID)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'node_id': {'jmespath': 'data[0].ID'}
+
+- test: # 异常获取主机列表 token错误
+    - name: "获取主机列表"
+    - url: "/api/v1/nodes"
+    - method: "get"
+    - headers: {template: {Authorization: token}}
+    - expected_status: [401]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 12033}
+        - compare: {jmespath: "message", comparator: "contains", expected: "Invalid Authorization"}
+
+- test: # 正常获取主机信息
+    - name: "正常获取主机信息"
+    - url: {template: "/api/v1/nodes/$node_id/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators::
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "异常获取主机信息 node_id 不存在"
+    - url: {template: "/api/v1/nodes/node_id/info"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [503]
+    - validators::
+        - compare: {jmespath: "code", comparator: "eq", expected: 11702}
+        - compare: {jmespath: "message", comparator: "contains", expected: "not found"}
+
+
+
+
+
+
+
 
