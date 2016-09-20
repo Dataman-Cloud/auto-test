@@ -312,6 +312,78 @@
         - compare: {jmespath: "length(data.Email)", comparator: "gt", expected: 0}
 
 - test: 
+    - name: "正常创建一个应用, 一个应用可包含多个服务"
+    - url: {template: "/api/v1/stacks"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"Namespace":"dddd","Stack":{"Version":"1","Services":{"mysql":{"Name":"mysql","Labels":{"name":"mysql"},"TaskTemplate":{"ContainerSpec":{"Image":"mysql","Labels":{"name":"mysql"},"Env":["MYSQL_ROOT_PASSWORD=111111"],"User":"root"},"RestartPolicy":{"Condition":"none","Delay":3000000000,"MaxAttempts":1,"Window":3000000000},"LogDriver":{"Name":"json-file"}},"Mode":{"Replicated":{"Replicas":1}},"UpdateConfig":null,"Networks":["ingress"],"EndpointSpec":{"Mode":"vip"}},"mywebsql":{"Name":"mywebsql","Labels":{"mywebsql":"mywebsql"},"TaskTemplate":{"ContainerSpec":{"Image":"quantumobject/docker-mywebsql","Labels":{"name":"mywebsql"},"User":"root"},"RestartPolicy":{"Condition":"none","Delay":3000000000,"MaxAttempts":1,"Window":3000000000},"LogDriver":{"Name":"json-file"}},"Mode":{"Replicated":{"Replicas":1}},"UpdateConfig":null,"Networks":["ingress"],"EndpointSpec":{"Mode":"vip","Ports":[{"Name":"testport","Protocol":"tcp","TargetPort":80,"PublishedPort":8000}]}}}}}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "success"}
+
+- test: 
+    - name: "查询指定应用以及应用包含所有服务的信息"
+    - url: {template: "/api/v1/stacks/dddd"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+
+- test: 
+    - name: "获取应用上所有的服务"
+    - url: {template: "/api/v1/stacks/dddd/services"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+    - extract_binds:
+        - 'service_id': {'jmespath': 'data[0].ID'}
+
+- test: 
+    - name: "获取应用上指定的服务"
+    - url: {template: "/api/v1/stacks/dddd/services/$service_id"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "修改任务数"
+    - url: {template: "/api/v1/stacks/dddd/services/$service_id"}
+    - method: "patch"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"NumTasks":2}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "success"}
+
+- test: 
+    - name: "获取应用上的服务的任务列表"
+    - url: {template: "/api/v1/stacks/dddd/services/$service_id/tasks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data[*].ID", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "获取应用上的服务的持续集成链接"
+    - url: {template: "/api/v1/stacks/dddd/services/$service_id/cd_url"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "gt", expected: 0}
+
+- test: 
     - name: "正常登出用户"
     - url: {template: "/account/v1/logout"}
     - method: "post"
@@ -320,6 +392,8 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "contains", expected: "success"}
+
+
 
 
 
