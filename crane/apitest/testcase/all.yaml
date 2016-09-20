@@ -86,6 +86,8 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'container_id': {'jmespath': 'data[0].Id'}
 
 - test: 
     - name: "异常获取主机的容器列表 node_id 不存在"
@@ -164,7 +166,7 @@
         - 'network_id1': {'jmespath': 'data.Id'}
 
 - test: 
-    - name: "获取获取网络详细信息"
+    - name: "正常获取获取网络详细信息"
     - url: {template: "/api/v1/networks/$network_id"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
@@ -193,19 +195,131 @@
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "contains", expected: "remove succsee"}
 
+- test: 
+    - name: "正常获取节点上所有的镜像"
+    - url: {template: "/api/v1/nodes/$node_id/images"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'image_id': {'jmespath': 'data[0].Id'}
+
+- test: 
+    - name: "正常获取节点上镜像信息"
+    - url: {template: "/api/v1/nodes/$node_id/images/$image_id"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Id)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "正常获取镜像历史记录"
+    - url: {template: "/api/v1/nodes/$node_id/images/$image_id/history"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "正常删除镜像"
+    - url: {template: "/api/v1/nodes/$node_id/images/$image_id"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "success"}
+
+- test: 
+    - name: "正常创建存储卷"
+    - url: {template: "/api/v1/nodes/$node_id/volumes"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"Driver":"local","Labels":{},"Name":"test"}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Name)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'volume_id': {'jmespath': 'data.Name'}
 
 
+- test: 
+    - name: "正常获取节点上所有的存储卷"
+    - url: {template: "/api/v1/nodes/$node_id/volumes"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Name)", comparator: "gt", expected: 0}
 
+- test: 
+    - name: "正常获取节点上的指定储存卷"
+    - url: {template: "/api/v1/nodes/$node_id/volumes/$volume_id"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Name)", comparator: "gt", expected: 0}
 
+- test: 
+    - name: "正常删除储存卷"
+    - url: {template: "/api/v1/nodes/$node_id/volumes/$volume_id"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: success}
 
+- test: 
+    - name: "正常获取平台信息"
+    - url: {template: "/misc/v1/config"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Version)", comparator: "gt", expected: 0}
 
+- test: 
+    - name: "正常搜索"
+    - url: {template: "/search/v1/luckysearch?keyword=l"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].ID)", comparator: "gt", expected: 0}
 
+- test: 
+    - name: "正常获取当前用户信息"
+    - url: {template: "/account/v1/aboutme"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Email)", comparator: "gt", expected: 0}
 
-
-
-
-
-
+- test: 
+    - name: "正常登出用户"
+    - url: {template: "/account/v1/logout"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "success"}
 
 
 
