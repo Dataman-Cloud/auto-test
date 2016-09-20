@@ -63,7 +63,7 @@
     - method: "get"
     - headers: {template: {Authorization: $token}}
     - expected_status: [200]
-    - validators::
+    - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
 
@@ -76,6 +76,137 @@
     - validators::
         - compare: {jmespath: "code", comparator: "eq", expected: 11702}
         - compare: {jmespath: "message", comparator: "contains", expected: "not found"}
+
+- test: # 正常获取主机的容器列表
+    - name: "正常获取主机的容器列表"
+    - url: {template: "/api/v1/nodes/$node_id/containers"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "异常获取主机的容器列表 node_id 不存在"
+    - url: {template: "/api/v1/nodes/node_id/containers"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [503]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 11702}
+        - compare: {jmespath: "message", comparator: "contains", expected: "not found"}
+
+- test: 
+    - name: "获取指定节点上的network "
+    - url: {template: "/api/v1/nodes/$node_id/networks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Id)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "异常获取指定节点上的network  node_id 不存在"
+    - url: {template: "/api/v1/nodes/node_id/networks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [503]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 11702}
+        - compare: {jmespath: "message", comparator: "contains", expected: "not found"}
+
+- test: 
+    - name: "正常在相应节点上创建集群网络"
+    - url: {template: "/api/v1/nodes/$node_id/networks"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"Name":"string","CheckDuplicate":true,"Driver":"overlay","IPAM":{"Driver":"default","Config":[],"Options":{},"Labels":{},"Internal":true,"EnableIPv6":true}}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'network_id': {'jmespath': 'data.Id'}
+
+- test: 
+    - name: "正常获取网络详细信息"
+    - url: {template: "/api/v1/nodes/$node_id/networks/$network_id"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Name)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "获取manager节点上所有的网络"
+    - url: {template: "/api/v1/networks"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data[*].Name)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "正常在manager节点上创建集群网络"
+    - url: {template: "/api/v1/networks"}
+    - method: "post"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"Name":"string1","CheckDuplicate":true,"Driver":"overlay","IPAM":{"Driver":"default","Config":[],"Options":{},"Labels":{},"Internal":true,"EnableIPv6":true}}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Id)", comparator: "gt", expected: 0}
+    - extract_binds:
+        - 'network_id1': {'jmespath': 'data.Id'}
+
+- test: 
+    - name: "获取获取网络详细信息"
+    - url: {template: "/api/v1/networks/$network_id"}
+    - method: "get"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "length(data.Name)", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "正常删除manager节点集群网络"
+    - url: {template: "/api/v1/networks/$network_id"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "remove succsee"}
+
+- test: 
+    - name: "正常删除manager节点集群网络"
+    - url: {template: "/api/v1/networks/$network_id1"}
+    - method: "delete"
+    - headers: {template: {Authorization: $token}}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "remove succsee"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
