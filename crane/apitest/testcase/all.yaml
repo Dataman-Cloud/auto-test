@@ -347,7 +347,7 @@
     - url: {template: "/api/v1/stacks/dddd/services/$service_id"}
     - method: "get"
     - headers: {template: {Authorization: $token}}
-    - expected_status: [200]
+    - expected_status: [209]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "length(data.ID)", comparator: "gt", expected: 0}
@@ -382,6 +382,17 @@
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 0}
         - compare: {jmespath: "data", comparator: "gt", expected: 0}
+
+- test: 
+    - name: "更新应用上指定的服务"
+    - url: {template: "/api/v1/stacks/dddd/services/$service_id"}
+    - method: "put"
+    - headers: {template: {Authorization: $token}}
+    - body: {template: '{"Name":"mywebsql","Labels":{"mywebsql":"mywebsql"},"TaskTemplate":{"ContainerSpec":{"Image":"quantumobject/docker-mywebsql","Labels":{"name":"mywebsql"},"User":"root"},"RestartPolicy":{"Condition":"none","Delay":3000000001,"MaxAttempts":1,"Window":3000000000},"LogDriver":{"Name":"json-file"}},"Mode":{"Replicated":{"Replicas":1}},"UpdateConfig":null,"Networks":["ingress"],"EndpointSpec":{"Mode":"vip","Ports":[{"Name":"testport","Protocol":"tcp","TargetPort":80,"PublishedPort":8000}]}}'}
+    - expected_status: [200]
+    - validators:
+        - compare: {jmespath: "code", comparator: "eq", expected: 0}
+        - compare: {jmespath: "data", comparator: "contains", expected: "success"}
 
 - test: 
     - name: "正常登出用户"

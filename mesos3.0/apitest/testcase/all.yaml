@@ -369,7 +369,7 @@
     - method: "put"
     - body: '{"id":"simple-temp","cmd":null,"cpus":0.1,"mem":16,"disk":0,"instances":2,"container":{"docker":{"image":"blackicebird/2048:latest","network":"BRIDGE"},"type":"DOCKER"}}'
     - headers: {template: {Authorization: $token}}
-    - expected_status: [400]
+    - expected_status: [404]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 22001}
         - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
@@ -529,7 +529,7 @@
     - url: {template: "/v1/apps/appid0000000000"}
     - method: "delete"
     - headers: {template: {Authorization: $token}}
-    - expected_status: [400]
+    - expected_status: [404]
     - validators:
         - compare: {jmespath: "code", comparator: "eq", expected: 22001}
         - compare: {jmespath: "data", comparator: "contains", expected: "does not exist"}
